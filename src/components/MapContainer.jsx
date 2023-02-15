@@ -94,13 +94,13 @@ function MapContainer() {
       log(Level.DEBUG, state.dronePosition);
       map.setCenter(state.dronePosition);
     }, 1000 / state.framesPerSecond);
-    log(Level.DEBUG, "Current interval: ", interval)
+    log(Level.DEBUG, "Current interval: ", interval);
     // firstInterval.current = interval;
     dispatch({
       type: SET_DRONE_MOVEMENT_INTERVAL,
       payload: interval,
     });
-  }, [map])
+  }, [map]);
 
   return isLoaded ? (
     <GoogleMap

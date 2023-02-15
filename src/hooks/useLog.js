@@ -7,11 +7,11 @@ export const useLog = (componentName) => {
 
   const isLogLevelEnabled = (level) => {
     return state.enabledLogLevel >= level;
-  }
+  };
 
   const logEnabled = (level, ...logBody) => {
-    if(!isLogLevelEnabled(level)) {
-        return;
+    if (!isLogLevelEnabled(level)) {
+      return;
     }
     logBody.unshift(componentName);
     switch (level) {
