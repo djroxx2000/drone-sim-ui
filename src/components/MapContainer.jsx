@@ -5,26 +5,34 @@ import {
   useJsApiLoader,
   Marker,
 } from "@react-google-maps/api";
-import { center, performStartupOperations } from "../utils/MapUtils";
+import {
+  center,
+  performStartupOperations,
+  mapContainerStyle,
+  polyLineOptions,
+  getCoordDelta,
+} from "../utils/MapUtils";
 import droneIcon from "../assets/drone.svg";
 import { GlobalContext } from "../context/global/GlobalProvider";
 import {
   Level,
   SET_DRONE_MOVEMENT_INTERVAL,
   UPDATE_DRONE_POSITION,
+  SET_NEXT_COORDS,
+  CLEAR_DRONE_MOVEMENT_INTERVAL,
+  RELOAD_COORDS,
 } from "../utils/constants";
 import { useLog } from "../hooks/useLog";
 
 function MapContainer() {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
-    googleMapsApiKey: process.env.REACT_APP_FREE_API_KEY,
+    googleMapsApiKey: process.env.REACT_APP_MY_API_KEY,
   });
   const [state, dispatch] = React.useContext(GlobalContext);
   const { log } = useLog("MapContainer");
 
   const [map, setMap] = React.useState(null);
-  const firstInterval = React.useRef(null);
 
   const onMapLoad = React.useCallback(function callback(map) {
     log(Level.INFO, "Loading map...");
@@ -32,91 +40,100 @@ function MapContainer() {
     setMap(map);
   }, []);
 
-  const onUnmount = React.useCallback(function callback(map) {
+  const onUnmount = React.useCallback(function callback(_) {
     setMap(null);
   }, []);
 
-  const containerStyle = {
-    width: "100%",
-    height: "100%",
-  };
-
   const onPolylineLoad = (polyline) => {
-    log(Level.DEBUG, "POLYLINE: ", polyline);
+    log(Level.DEBUG, "POLYLINE:\n", polyline);
   };
 
   const onMarkerLoad = (marker) => {
-    log(Level.DEBUG, "MARKER: ", marker);
-  };
-
-  const path = [
-    { lat: 37.338207, lng: -121.88633 },
-    { lat: 37.348207, lng: -121.87633 },
-    { lat: 37.348207, lng: -121.86633 },
-    { lat: 37.338207, lng: -121.86633 },
-    { lat: 37.336207, lng: -121.88633 },
-    { lat: 37.338207, lng: -121.88633 },
-  ];
-
-  const options = {
-    strokeColor: "#FF0000",
-    strokeOpacity: 0.8,
-    strokeWeight: 2,
-    fillColor: "#FF0000",
-    fillOpacity: 0.35,
-    clickable: false,
-    draggable: false,
-    editable: false,
-    visible: true,
-    radius: 30000,
-    paths: [path],
-    zIndex: 1,
+    log(Level.DEBUG, "MARKER:\n", marker);
   };
 
   const onMarkerPositionChanged = () => {
-    log(Level.DEBUG, "Updated marker position:", state.dronePosition);
+    log(Level.DEBUG, "Marker position changed:\n", state.dronePosition);
   };
 
   React.useEffect(() => {
-    if (!map || state.droneMovementInterval != null) {
+    if (
+      !map ||
+      state.droneMovementInterval != null ||
+      !state.isDroneMovementEnabled
+    ) {
+      return;
+    }
+    if (
+      state.dronePosition.lat == state.nextCoords.lat &&
+      state.dronePosition.lng == state.nextCoords.lng
+    ) {
+      dispatch({
+        type: SET_NEXT_COORDS,
+      });
       return;
     }
     const interval = setInterval(() => {
+      const [nextLat, nextLng] = getCoordDelta(
+        state.lastCoords,
+        state.dronePosition,
+        state.nextCoords,
+        state.droneSpeed
+      );
       dispatch({
         type: UPDATE_DRONE_POSITION,
         payload: {
-          latDelta: state.droneSpeed,
-          lngDelta: state.droneSpeed,
+          nextLat,
+          nextLng,
         },
       });
-      state.dronePosition.lat += state.droneSpeed;
-      state.dronePosition.lng += state.droneSpeed;
+      state.dronePosition.lat = nextLat;
+      state.dronePosition.lng = nextLng;
       log(Level.DEBUG, state.dronePosition);
-      map.setCenter(state.dronePosition);
+      // map.setCenter(state.dronePosition);
+
+      if (
+        state.dronePosition.lat == state.nextCoords.lat &&
+        state.dronePosition.lng == state.nextCoords.lng
+      ) {
+        dispatch({ type: SET_NEXT_COORDS });
+        dispatch({ type: CLEAR_DRONE_MOVEMENT_INTERVAL });
+      }
     }, 1000 / state.framesPerSecond);
-    log(Level.DEBUG, "Current interval: ", interval);
-    // firstInterval.current = interval;
+
     dispatch({
       type: SET_DRONE_MOVEMENT_INTERVAL,
       payload: interval,
     });
-  }, [map]);
+  }, [map, state.nextCoords]);
+
+  React.useEffect(() => {
+    log(Level.DEBUG, "Toggled isDroneMovementEnabled");
+    if (state.isDroneMovementEnabled && state.droneMovementInterval == null) {
+      dispatch({ type: RELOAD_COORDS });
+    } else {
+      dispatch({ type: CLEAR_DRONE_MOVEMENT_INTERVAL });
+    }
+  }, [state.isDroneMovementEnabled]);
 
   return isLoaded ? (
     <GoogleMap
-      mapContainerStyle={containerStyle}
+      mapContainerStyle={mapContainerStyle}
       center={center}
       zoom={15}
       onLoad={onMapLoad}
       onUnmount={onUnmount}
     >
-      <Polyline onLoad={onPolylineLoad} path={path} options={options} />
+      <Polyline
+        onLoad={onPolylineLoad}
+        path={state.activePath}
+        options={polyLineOptions}
+      />
       <Marker
         onLoad={onMarkerLoad}
         onPositionChanged={onMarkerPositionChanged}
         position={state.dronePosition}
         icon={droneIcon}
-        label={"drone"}
       />
     </GoogleMap>
   ) : (
