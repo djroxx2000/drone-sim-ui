@@ -1,7 +1,6 @@
 .control-panel-container {
   box-sizing: border-box;
   height: 100%;
-  /* max-height: 100vh; */
   overflow-y: scroll;
   color: white;
   background: #444;
@@ -9,7 +8,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* justify-content: center; */
   font-weight: 500;
 }
 
@@ -65,8 +63,7 @@ input[type="file"] {
   background-color: #222;
   border: none;
   padding: 8px;
-  border-radius: 5px;
-  /* font-size: 16px; */
+  border-radius: 3px;
 }
 
 input[type="file"]:hover {
@@ -79,8 +76,6 @@ input[type="file"]::-webkit-file-upload-button {
   background-color: #00000000;
   border: none;
   padding: 5px;
-  /* border-radius: 5px; */
-  /* font-size: 16px; */
   border-right: 2px solid white;
   padding-right: 5px;
   font-weight: 600;
@@ -99,4 +94,13 @@ input[type="file"]::-webkit-file-upload-button:hover {
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
+}
+
+.empty-paths-label {
+  box-sizing: border-box;
+  font-weight: 100;
+  background: #333;
+  width: 100%;
+  border-radius: 3px;
+  padding: 10px;
 }

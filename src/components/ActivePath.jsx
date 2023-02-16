@@ -4,8 +4,21 @@ import { parsePathFromPathCoords } from "../utils/ControlPanelUtils";
 import { GlobalContext } from "../context/global/GlobalProvider";
 
 function ActivePath({ pathCoords }) {
-  const [state, dispatch] = React.useContext(GlobalContext);
+  const [state] = React.useContext(GlobalContext);
   const path = parsePathFromPathCoords(pathCoords.trim());
+  React.useEffect(() => {
+    const container = document.getElementsByClassName(
+      "active-path-container"
+    )[0];
+    const currentCoord = document.getElementsByClassName("current-coord")[0];
+    if (
+      currentCoord.getBoundingClientRect().top -
+        container.getBoundingClientRect().top >
+      120
+    ) {
+      currentCoord.scrollIntoView();
+    }
+  }, [state.droneCurrentPath.length]);
   return (
     <div className="active-path-container">
       {path.map((coord, idx) => {

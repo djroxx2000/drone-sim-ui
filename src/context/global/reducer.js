@@ -16,7 +16,7 @@ import { initialPath } from "../../utils/MapUtils";
 
 export const reducer = (state, action) => {
   if (state.enabledLogLevel >= Level.DEBUG) {
-    console.debug(action.type, action.payload);
+    console.log(action.type, action.payload);
   }
   switch (action.type) {
     case UPDATE_DRONE_POSITION:
@@ -28,7 +28,6 @@ export const reducer = (state, action) => {
         },
       };
     case SET_DRONE_MOVEMENT_INTERVAL:
-      // state.droneMovementInterval = action.payload;
       return {
         ...state,
         droneMovementInterval: action.payload,
@@ -120,7 +119,7 @@ export const initialState = {
   nextCoords: initialPath[0],
   droneMovementInterval: null,
   enabledLogLevel: Level.INFO,
-  droneSpeed: 0.0001,
+  droneSpeed: 0.0005,
   framesPerSecond: 10,
   activePath: initialPath,
   droneCurrentPath: initialPath,

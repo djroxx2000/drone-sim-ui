@@ -1,6 +1,5 @@
 import "./ControlPanel.css";
 import React from "react";
-// import droneIcon from "../assets/drone.png";
 import { GlobalContext } from "../context/global/GlobalProvider";
 import { useLog } from "../hooks/useLog";
 import {
@@ -35,6 +34,10 @@ function ControlPanel() {
 
   const reloadPath = () => {
     dispatch({ type: RELOAD_PATH });
+    setTimeout(() => {
+      const currentCoord = document.getElementsByClassName("current-coord")[0];
+      currentCoord.scrollIntoView();
+    }, 100);
   };
 
   const [pathCoords, setPathCoords] = React.useState("");
@@ -92,7 +95,7 @@ function ControlPanel() {
       }
     };
     reader.onerror = (e) => {
-      console.log("Error reading file: ", e);
+      console.error("Error reading file: ", e);
     };
 
     reader.readAsText(file);
@@ -109,7 +112,6 @@ function ControlPanel() {
 
   return (
     <div className="control-panel-container">
-      {/* <img width="100px" height="100px" src={droneIcon} alt="" /> */}
       <div className="control-panel-header"> Simulation Control Panel</div>
       <div className="simulation-controls">
         <button className="btn-md" onClick={toggleDroneMovement}>
@@ -175,6 +177,11 @@ function ControlPanel() {
       <div className="path-list-container">
         <div className="control-panel-header">Added Paths</div>
         <div className="path-list">
+          {state.paths.length < 1 ? (
+            <div className="empty-paths-label">No Paths Added... </div>
+          ) : (
+            ""
+          )}
           {state.paths.map((path, idx) => {
             return <PathCoord key={idx} currentPath={path} pathIdx={idx} />;
           })}
