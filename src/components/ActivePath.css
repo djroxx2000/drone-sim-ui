@@ -4,6 +4,7 @@
   border-radius: 5px;
   max-height: 170px;
   overflow-y: scroll;
+  min-height: 170px;
 }
 
 .active-path-container::-webkit-scrollbar {
