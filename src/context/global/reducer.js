@@ -8,7 +8,10 @@ import {
   TOGGLE_DRONE_MOVEMENT,
   RELOAD_PATH,
   SET_ACTIVE_PATH,
+  ADD_NEW_PATH,
+  REMOVE_PATH,
 } from "../../utils/constants";
+import { log } from "../../utils/logUtils";
 import { initialPath } from "../../utils/MapUtils";
 
 export const reducer = (state, action) => {
@@ -38,7 +41,9 @@ export const reducer = (state, action) => {
       };
     case SET_NEXT_COORDS:
       if (state.droneCurrentPath.length <= 1) {
-        return state;
+        return {
+          ...state,
+        };
       }
       const [lastCoords, ...updatedPath] = state.droneCurrentPath;
       return {
@@ -88,6 +93,18 @@ export const reducer = (state, action) => {
           ...action.payload[0],
         },
       };
+    case ADD_NEW_PATH:
+      return {
+        ...state,
+        paths: [...state.paths, [...action.payload]],
+      };
+    case REMOVE_PATH:
+      const updatedPaths = [...state.paths];
+      updatedPaths.splice(action.payload.pathIdx, 1);
+      return {
+        ...state,
+        paths: [...updatedPaths],
+      };
     default:
       console.error("Dispatch action not recognized");
       return state;
@@ -109,4 +126,5 @@ export const initialState = {
   droneCurrentPath: initialPath,
   isDroneMovementEnabled: false,
   lastCoords: initialPath[0],
+  paths: [],
 };

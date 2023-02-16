@@ -1,17 +1,34 @@
+import "./ControlPanel.css";
 import React from "react";
-import droneIcon from "../assets/drone.png";
+// import droneIcon from "../assets/drone.png";
 import { GlobalContext } from "../context/global/GlobalProvider";
 import { useLog } from "../hooks/useLog";
 import {
   TOGGLE_DRONE_MOVEMENT,
   RELOAD_PATH,
   SET_ACTIVE_PATH,
+  ADD_NEW_PATH,
   Level,
 } from "../utils/constants";
+import {
+  FaPlay,
+  FaPause,
+  FaHistory,
+  FaPencilAlt,
+  FaPlus,
+  FaCheck,
+} from "react-icons/fa";
+import PathCoord from "./PathCoord";
+import ActivePath from "./ActivePath";
+import {
+  parsePathFromPathCoords,
+  getPathCoordsFromPath,
+} from "../utils/ControlPanelUtils";
 
 function ControlPanel() {
   const [state, dispatch] = React.useContext(GlobalContext);
   const { log } = useLog("ControlPanel");
+  const [isEdit, setIsEdit] = React.useState(false);
   const toggleDroneMovement = () => {
     dispatch({ type: TOGGLE_DRONE_MOVEMENT });
   };
@@ -21,24 +38,6 @@ function ControlPanel() {
   };
 
   const [pathCoords, setPathCoords] = React.useState("");
-
-  const getPathCoordsFromPath = (path) => {
-    let textPath = "";
-    for (let coord of path) {
-      textPath += coord.lat + ", " + coord.lng + "\n";
-    }
-    return textPath;
-  };
-
-  const parsePathFromPathCoords = (coords) => {
-    const path = [];
-    const coordsList = coords.split("\n");
-    for (const coord of coordsList) {
-      const [lat, lng] = coord.split(",").map(parseFloat);
-      path.push({ lat, lng });
-    }
-    return path;
-  };
 
   const isValidPathCoords = (pathCoords) => {
     const regexPattern =
@@ -63,6 +62,21 @@ function ControlPanel() {
       type: SET_ACTIVE_PATH,
       payload: parsePathFromPathCoords(pathCoords.trim()),
     });
+    setIsEdit(false);
+  };
+
+  const addPath = () => {
+    if (!isValidPathCoords(pathCoords.trim())) {
+      return;
+    }
+    dispatch({
+      type: ADD_NEW_PATH,
+      payload: parsePathFromPathCoords(pathCoords.trim()),
+    });
+  };
+
+  const clearPreviousFile = (e) => {
+    e.target.value = null;
   };
 
   const readInputFile = (e) => {
@@ -71,6 +85,10 @@ function ControlPanel() {
     reader.onload = () => {
       if (isValidPathCoords(reader.result)) {
         setPathCoords(reader.result);
+        dispatch({
+          type: SET_ACTIVE_PATH,
+          payload: parsePathFromPathCoords(reader.result.trim()),
+        });
       }
     };
     reader.onerror = (e) => {
@@ -80,32 +98,87 @@ function ControlPanel() {
     reader.readAsText(file);
   };
 
+  const toggleEdit = () => {
+    setIsEdit(true);
+  };
+
   React.useEffect(() => {
     setPathCoords(getPathCoordsFromPath(state.activePath));
     reloadPath();
   }, [state.activePath]);
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <img width="100px" height="100px" src={droneIcon} alt="" />
-        <button onClick={toggleDroneMovement}>Play/Pause</button>
-        <button onClick={reloadPath}>Reload</button>
+    <div className="control-panel-container">
+      {/* <img width="100px" height="100px" src={droneIcon} alt="" /> */}
+      <div className="control-panel-header"> Simulation Control Panel</div>
+      <div className="simulation-controls">
+        <button className="btn-md" onClick={toggleDroneMovement}>
+          {state.isDroneMovementEnabled ? (
+            <div className="btn-content">
+              <FaPause /> &nbsp;&nbsp; Pause
+            </div>
+          ) : (
+            <div className="btn-content">
+              <FaPlay /> &nbsp;&nbsp; Play
+            </div>
+          )}
+        </button>
+        <button className="btn-md" onClick={reloadPath}>
+          <FaHistory />
+          &nbsp;&nbsp;
+          {"Reload"}
+        </button>
+      </div>
+
+      <div className="control-panel-header">Active Path</div>
+      {isEdit ? (
         <textarea
+          className="textarea"
           name="pathCoords"
           cols="30"
           rows="10"
           value={pathCoords}
           onInput={(e) => setPathCoords(e.target.value)}
         ></textarea>
-        <button onClick={updatePath}>Update Path</button>
-        <input type="file" name="path" onChange={readInputFile} />
+      ) : (
+        <ActivePath pathCoords={pathCoords} />
+      )}
+
+      <div className="simulation-controls">
+        {isEdit ? (
+          <button className="btn-md" onClick={updatePath}>
+            <FaCheck />
+            &nbsp;&nbsp; Use
+          </button>
+        ) : (
+          <button className="btn-md" onClick={toggleEdit}>
+            <FaPencilAlt />
+            &nbsp;&nbsp; Edit
+          </button>
+        )}
+
+        <button className="btn-md" onClick={addPath}>
+          <FaPlus />
+          &nbsp;&nbsp; Add
+        </button>
+      </div>
+      <div className="control-panel-header">Add Flight Path from file</div>
+      <div className="path-header">
+        <input
+          className="file-input"
+          type="file"
+          name="path"
+          onClick={clearPreviousFile}
+          onChange={readInputFile}
+        />
+      </div>
+      <div className="path-list-container">
+        <div className="control-panel-header">Added Paths</div>
+        <div className="path-list">
+          {state.paths.map((path, idx) => {
+            return <PathCoord key={idx} currentPath={path} pathIdx={idx} />;
+          })}
+        </div>
       </div>
     </div>
   );

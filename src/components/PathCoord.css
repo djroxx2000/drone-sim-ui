@@ -1,0 +1,49 @@
+.coord-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* padding: 5px; */
+  background: #333;
+  border-radius: 3px;
+  margin: 5px;
+  /* font-size: 10px; */
+  max-height: 135px;
+  overflow-y: scroll;
+  font-weight: 100;
+  width: 100%;
+  position: relative;
+}
+
+.coord-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.coord-container::-webkit-scrollbar-thumb {
+  background: #222;
+}
+
+.coord {
+  display: flex;
+  border-bottom: 1px solid #fff;
+}
+
+.coord-controls {
+  display: flex;
+  padding: 0 20px;
+  font-weight: 600;
+  justify-content: space-between;
+  align-items: center;
+  vertical-align: middle;
+  position: sticky;
+  top: 0;
+  background: #222a;
+}
+
+.coord-controls-right {
+  display: flex;
+}
+
+.coord-point {
+  padding: 5px;
+}
